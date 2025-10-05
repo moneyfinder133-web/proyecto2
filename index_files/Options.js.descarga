@@ -1,0 +1,1 @@
+﻿function GetFormOption(e) { return { container: e, i18n: { preloaded: { "es-ES": {} } }, allowEdit: !1, events: {}, editPanelOrder: ["options", "attrs"] } }
